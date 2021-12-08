@@ -28,23 +28,25 @@ contract Poll {
     }
 
     /**
-    * @dev Checks if address is eligible to vote. Also returns the index of the shareholder in
-    * the array. If the address cannot be found, returns -1.
+    * @dev Checks if address in the provided array and returns corresponding index. If the 
+    * address cannot be found, returns (false, 0).
+    * @return success true if address found, otherwise false.
+    * @return arrIndex uint index of found address. Defaults to 0.
     **/
-    function isShareholder(address _shareholder) internal view returns (bool success, uint shareholderIndex) {
+    function inArray(address[] memory arr, address _address) internal pure returns (bool success, uint arrIndex) {
 
         // Only search if there is a list to search.
-        if (shareholders.length > 0) {
+        if (arr.length > 0) {
 
-            // Search for shareholder index;
-            for (uint i=0; i<shareholders.length; i++) {
-                if (shareholders[i] == _shareholder) {
+            // Search for address index;
+            for (uint i=0; i<arr.length; i++) {
+                if (arr[i] == _address) {
                     return (true, i);
                 }
             }
         }
 
-        // Base case - shareholder not found.
+        // Base case - address not found.
         return (false, 0);
 
     }
@@ -56,7 +58,7 @@ contract Poll {
         require(msg.sender == director, "Only the director can add shareholders!");
 
         // Only add new addresses.
-        (bool inList, ) = isShareholder(_shareholder);
+        (bool inList, ) = inArray(shareholders, _shareholder);
         require(!inList, "Address already a shareholder!");
 
         // Update address to shareholder in mapping.
@@ -72,7 +74,7 @@ contract Poll {
         require(msg.sender == director, "Only the director can remove shareholders!");
 
         // Only remove known addresses.
-        (bool inList, uint index) = isShareholder(_shareholder);
+        (bool inList, uint index) = inArray(shareholders, _shareholder);
         require(inList, "Address not a shareholder!"); // This also checks for an empty list!
 
         // Remove address from shareholder mapping by copying over last value. This stops gaps from forming.
@@ -85,6 +87,7 @@ contract Poll {
 
     /** 
     * @dev Adds an address to the shareholders array, it is isn't already in there.
+    * @param _question string name description of the question.
     **/
     function addQuestion(string memory _question) public {
         require(msg.sender == director, "Only the director can add questions!");
@@ -99,32 +102,20 @@ contract Poll {
 
     }
 
-    function hasVotedOn(Question memory _question, address _shareholder) internal pure returns (bool){
-
-        // Only search if there is a list to search.
-        if (_question.voted.length > 0) {
-
-            // Search for shareholder index;
-            for (uint i=0; i<_question.voted.length; i++) {
-                if (_question.voted[i] == _shareholder) {
-                    return true;
-                }
-            }
-        }
-
-        // Base case - shareholder not found.
-        return false;
-
-    }
-
+    /**
+    * @dev Lets a shareholder vote on a question.
+    * @param _question uint index of the question to be voted on.
+    * @param _decision boolean describing the actual vote of the shareholder.
+    **/
     function voteOnQuestion(uint _question, bool _decision) public {
         
         // Only allow shareholders to vote.
-        (bool exists, ) = isShareholder(msg.sender);
+        (bool exists, ) = inArray(shareholders, msg.sender);
         require(exists, "Address not a shareholder!");
 
         // Only allow shareholder to vote once.
-        require(!hasVotedOn(questions[_question], msg.sender), "Shareholder has already voted on this question!");
+        (bool hasVoted, ) = inArray(questions[_question].voted, msg.sender);
+        require(!hasVoted, "Shareholder has already voted on this question!");
 
         // Only allow voting on open questions.
         require(_question < questions.length, "Selected question is out of bounds of question array.");
@@ -142,6 +133,10 @@ contract Poll {
 
     }
 
+    /**
+    * @dev Closes a question corresponding to the given index. Only usable by director.
+    * @param _question uint index of the question to be voted on.
+    **/ 
     function closeQuestion (uint _question) public {
         require(msg.sender == director, "Only the director can close the vote!");
 
@@ -154,12 +149,18 @@ contract Poll {
 
     }
 
-    function viewResultOf(uint _question) public view returns (string memory q){
+    /**
+    * @dev Allows shareholders and the director to view results. Shareholders can only see results
+    * of closed questions.
+    * @param _question uint index of the question to be voted on.
+    * @return result string describing the vote's result.
+    **/
+    function viewResultOf(uint _question) public view returns (string memory result){
 
         if (msg.sender != director) {
 
             // Only shareholders can see the results.
-            (bool exists, ) = isShareholder(msg.sender);
+            (bool exists, ) = inArray(shareholders, msg.sender);
             require(exists, "You are not a shareholder and cannot see the results.");
             
             // Only allow closed questions to be viewed.
@@ -170,16 +171,16 @@ contract Poll {
         require(_question < questions.length, "Selected question is out of bounds of question array.");
         
         // When voteCount == 0 (i.e. equal amount of yes and no).
-        q = "Majority votes indecisive.";
+        result = "Majority votes indecisive.";
         
         // More yes than no answers.
         if (questions[_question].voteCount > 0) {
-            q = "Majority votes yes";
+            result = "Majority votes yes";
         }
 
         // More no than yes.
         if (questions[_question].voteCount < 0) {
-            q = "Majority votes no";
+            result = "Majority votes no";
         }
         
     }
