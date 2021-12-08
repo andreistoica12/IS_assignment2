@@ -30,6 +30,8 @@ contract Poll {
     /**
     * @dev Checks if address in the provided array and returns corresponding index. If the 
     * address cannot be found, returns (false, 0).
+    * @return success true if address found, otherwise false.
+    * @return arrIndex uint index of found address. Defaults to 0.
     **/
     function inArray(address[] memory arr, address _address) internal pure returns (bool success, uint arrIndex) {
 
@@ -85,6 +87,7 @@ contract Poll {
 
     /** 
     * @dev Adds an address to the shareholders array, it is isn't already in there.
+    * @param _question string name description of the question.
     **/
     function addQuestion(string memory _question) public {
         require(msg.sender == director, "Only the director can add questions!");
@@ -99,6 +102,11 @@ contract Poll {
 
     }
 
+    /**
+    * @dev Lets a shareholder vote on a question.
+    * @param _question uint index of the question to be voted on.
+    * @param _decision boolean describing the actual vote of the shareholder.
+    **/
     function voteOnQuestion(uint _question, bool _decision) public {
         
         // Only allow shareholders to vote.
@@ -127,6 +135,7 @@ contract Poll {
 
     /**
     * @dev Closes a question corresponding to the given index. Only usable by director.
+    * @param _question uint index of the question to be voted on.
     **/ 
     function closeQuestion (uint _question) public {
         require(msg.sender == director, "Only the director can close the vote!");
@@ -140,7 +149,13 @@ contract Poll {
 
     }
 
-    function viewResultOf(uint _question) public view returns (string memory q){
+    /**
+    * @dev Allows shareholders and the director to view results. Shareholders can only see results
+    * of closed questions.
+    * @param _question uint index of the question to be voted on.
+    * @return result string describing the vote's result.
+    **/
+    function viewResultOf(uint _question) public view returns (string memory result){
 
         if (msg.sender != director) {
 
@@ -156,16 +171,16 @@ contract Poll {
         require(_question < questions.length, "Selected question is out of bounds of question array.");
         
         // When voteCount == 0 (i.e. equal amount of yes and no).
-        q = "Majority votes indecisive.";
+        result = "Majority votes indecisive.";
         
         // More yes than no answers.
         if (questions[_question].voteCount > 0) {
-            q = "Majority votes yes";
+            result = "Majority votes yes";
         }
 
         // More no than yes.
         if (questions[_question].voteCount < 0) {
-            q = "Majority votes no";
+            result = "Majority votes no";
         }
         
     }
