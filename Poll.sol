@@ -28,23 +28,23 @@ contract Poll {
     }
 
     /**
-    * @dev Checks if address is eligible to vote. Also returns the index of the shareholder in
-    * the array. If the address cannot be found, returns -1.
+    * @dev Checks if address in the provided array and returns corresponding index. If the 
+    * address cannot be found, returns (false, 0).
     **/
-    function isShareholder(address _shareholder) internal view returns (bool success, uint shareholderIndex) {
+    function inArray(address[] memory arr, address _address) internal pure returns (bool success, uint arrIndex) {
 
         // Only search if there is a list to search.
-        if (shareholders.length > 0) {
+        if (arr.length > 0) {
 
-            // Search for shareholder index;
-            for (uint i=0; i<shareholders.length; i++) {
-                if (shareholders[i] == _shareholder) {
+            // Search for address index;
+            for (uint i=0; i<arr.length; i++) {
+                if (arr[i] == _address) {
                     return (true, i);
                 }
             }
         }
 
-        // Base case - shareholder not found.
+        // Base case - address not found.
         return (false, 0);
 
     }
@@ -56,7 +56,7 @@ contract Poll {
         require(msg.sender == director, "Only the director can add shareholders!");
 
         // Only add new addresses.
-        (bool inList, ) = isShareholder(_shareholder);
+        (bool inList, ) = inArray(shareholders, _shareholder);
         require(!inList, "Address already a shareholder!");
 
         // Update address to shareholder in mapping.
@@ -72,7 +72,7 @@ contract Poll {
         require(msg.sender == director, "Only the director can remove shareholders!");
 
         // Only remove known addresses.
-        (bool inList, uint index) = isShareholder(_shareholder);
+        (bool inList, uint index) = inArray(shareholders, _shareholder);
         require(inList, "Address not a shareholder!"); // This also checks for an empty list!
 
         // Remove address from shareholder mapping by copying over last value. This stops gaps from forming.
@@ -99,32 +99,15 @@ contract Poll {
 
     }
 
-    function hasVotedOn(Question memory _question, address _shareholder) internal pure returns (bool){
-
-        // Only search if there is a list to search.
-        if (_question.voted.length > 0) {
-
-            // Search for shareholder index;
-            for (uint i=0; i<_question.voted.length; i++) {
-                if (_question.voted[i] == _shareholder) {
-                    return true;
-                }
-            }
-        }
-
-        // Base case - shareholder not found.
-        return false;
-
-    }
-
     function voteOnQuestion(uint _question, bool _decision) public {
         
         // Only allow shareholders to vote.
-        (bool exists, ) = isShareholder(msg.sender);
+        (bool exists, ) = inArray(shareholders, msg.sender);
         require(exists, "Address not a shareholder!");
 
         // Only allow shareholder to vote once.
-        require(!hasVotedOn(questions[_question], msg.sender), "Shareholder has already voted on this question!");
+        (bool hasVoted, ) = inArray(questions[_question].voted, msg.sender);
+        require(!hasVoted, "Shareholder has already voted on this question!");
 
         // Only allow voting on open questions.
         require(_question < questions.length, "Selected question is out of bounds of question array.");
@@ -142,6 +125,9 @@ contract Poll {
 
     }
 
+    /**
+    * @dev Closes a question corresponding to the given index. Only usable by director.
+    **/ 
     function closeQuestion (uint _question) public {
         require(msg.sender == director, "Only the director can close the vote!");
 
@@ -159,7 +145,7 @@ contract Poll {
         if (msg.sender != director) {
 
             // Only shareholders can see the results.
-            (bool exists, ) = isShareholder(msg.sender);
+            (bool exists, ) = inArray(shareholders, msg.sender);
             require(exists, "You are not a shareholder and cannot see the results.");
             
             // Only allow closed questions to be viewed.
