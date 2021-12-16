@@ -20,7 +20,7 @@ class BoundingBox:
 		:Example:
 		>>> BoundingBox(0,1,2,4)
 		"""
-		self.data = np.array([[min_x, max_x],[ min_y, max_y]],np.float)
+		self.data = np.array([[min_x, max_x],[ min_y, max_y]], float)
 
 	def lower_left(self):
 		"""
