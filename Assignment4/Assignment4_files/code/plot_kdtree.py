@@ -76,10 +76,10 @@ if __name__ == '__main__':
 		plotter.add_closest_query(closest_query,geometries[ordered[0]])		
 
 	
-	# Using the QuadTree depth to subsample the KDTree		
-	if args.quadtree:
-	# :To be implemented by the student:
-		raise Exception('plot_kdtree:: `# Using the QuadTree depth to subsample the KDTree` should be implemented by the student')	
+	# # Using the QuadTree depth to subsample the KDTree
+	# if args.quadtree:
+	# # :To be implemented by the student:
+	# 	raise Exception('plot_kdtree:: `# Using the QuadTree depth to subsample the KDTree` should be implemented by the student')
 
 	plotter.plot()
 

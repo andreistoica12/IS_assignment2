@@ -17,8 +17,8 @@ class Database:
 			self.fields_[field] = len(self.fields_)
 
 		self.unique_key = 0
-		self.num_fields = len(self.fields_) - 1 
-	
+		self.num_fields = len(self.fields_) - 1
+
 	def fields(self):
 		"""
 		Returns the Database's field list
@@ -28,7 +28,7 @@ class Database:
 		<<< {'key': 0, 'quad-lvl': 3, 'x': 1, 'y': 2}
 		"""
 		return self.fields_
-		
+
 
 	def insert(self,record):
 		"""
@@ -47,13 +47,13 @@ class Database:
 		"""
 		if len(record) > self.num_fields:
 			raise ValueError('This record contains has invalid length.')
-		
+
 		record.extend([0 for x in range(self.num_fields - len(record))])
 
-		self.unique_key += 1	
-		record.insert(0,self.unique_key)	
+		self.unique_key += 1
+		record.insert(0,self.unique_key)
 		self.db[self.unique_key] = record
-		
+
 		return self.unique_key
 
 	def insert_iterable(self, records):
@@ -88,7 +88,7 @@ class Database:
 				return self.db[key]
 			return None
 		try:
-			return [self.db[k] for k in key if k in self.db] 
+			return [self.db[k] for k in key if k in self.db]
 		except ValueError:
 			pass
 
@@ -116,7 +116,7 @@ class Database:
 		>>> db.update(1,0,9)
 		"""
 		self.db[key][index] = value
-	
+
 	def update_field(self,key,field,value):
 		"""
 		Updates a value for a field given the key 
@@ -130,17 +130,18 @@ class Database:
 		"""
 		self.update(key,self.fields_[field],value)
 
+
 if __name__ == '__main__':
 
-	# 1 creating a database with the following fields in order:	
+	# 1 creating a database with the following fields in order:
 	db = Database(["x","y","quad-lvl"])
-		
-	print("Creating a database")	
+
+	print("Creating a database")
 	for name,index in db.fields().items():
 		print("name: %s Index: %i" % (name,index))
 
 	# adding contents
-	print("Adding contents")	
+	print("Adding contents")
 	db.insert([1,2])
 	db.insert([1,2,3])
 	db.insert_iterable([[2,3],[3,4,5]])
@@ -148,13 +149,4 @@ if __name__ == '__main__':
 	db.update_field(1,"x",9)
 	db.update(1,2,10)
 	for record in db.query(db.keys()):
-		print ("record", record)
-
-	
-
-
-
-
-
- 
-	
+		print("record", record)

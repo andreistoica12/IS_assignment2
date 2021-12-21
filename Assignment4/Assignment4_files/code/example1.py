@@ -3,7 +3,7 @@ import scipy.spatial as sp
 import database as db
 import kdtree as kdt
 
-my_db = db.Database()
+my_db = db.Database(['x', 'y'])
 my_db.insert_iterable(
     [[1, 1], [1, 2], [4, 5], [1, 2], [3, 4], [5, 2.5], [10, 1.2], [5, 2.5], [10, 1.2], [7, 7], [5, 3], [6, 1],
      [3.5, 4.5]])
